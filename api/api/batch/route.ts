@@ -53,7 +53,7 @@ export default async function handler(req: any, res: any) {
           if ('error' in result) {
             return { url, error: result.error };
           }
-          return { url, ...result };
+          return result;
         } catch (error: any) {
           return { url, error: error.message || '提取失败' };
         }

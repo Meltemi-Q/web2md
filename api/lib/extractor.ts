@@ -2,7 +2,7 @@ import axios from 'axios';
 import { JSDOM } from 'jsdom';
 import { Readability } from '@mozilla/readability';
 import TurndownService from 'turndown';
-import { gfm } from 'turndown-plugin-gfm';
+import * as turndownGfm from 'turndown-plugin-gfm';
 
 export interface ExtractResult {
   title?: string;
@@ -42,11 +42,11 @@ export async function extractArticle(url: string): Promise<ExtractResult | { err
     });
 
     // 启用 GFM 插件（表格、删除线、任务列表）
-    turndownService.use(gfm);
+    turndownService.use(turndownGfm.gfm);
 
     // 自定义规则：保留图片 alt 文本
     turndownService.addRule('strikethrough', {
-      filter: ['del', 's', 'strike'],
+      filter: ['del', 's'],
       replacement: (content: string) => `~~${content}~~`
     });
 
