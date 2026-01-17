@@ -22,6 +22,7 @@ const BROWSER_REQUIRED_DOMAINS = [
   'weixin.qq.com',
   'xiaohongshu.com',
   'xhslink.com',
+  'reddit.com',
 ];
 
 const CHROMIUM_REMOTE_URL =
@@ -58,9 +59,13 @@ async function fetchWithHttp(url: string): Promise<string> {
 
 /**
  * 获取浏览器实例
+ * 在 Vercel 环境使用 chromium-min，本地使用完整 puppeteer
  */
 async function getBrowser() {
-  if (process.env.VERCEL_ENV === 'production') {
+  // Vercel 环境检测：VERCEL 环境变量在所有 Vercel 部署中都存在
+  const isVercel = process.env.VERCEL === '1';
+
+  if (isVercel) {
     const executablePath = await chromium.executablePath(CHROMIUM_REMOTE_URL);
     return puppeteerCore.launch({
       executablePath,
