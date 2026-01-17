@@ -102,7 +102,8 @@ vercel deploy
 - `@mozilla/readability` - 内容提取
 - `jsdom` - DOM 解析
 - `turndown` - HTML → Markdown
-- `axios` - HTTP 客户端
+- `puppeteer-core` - 无头浏览器控制（轻量版）
+- `@sparticuz/chromium-min` - Serverless 优化的 Chromium 浏览器
 
 ## 开发规范
 
@@ -122,7 +123,23 @@ vercel deploy
 
 ### 错误处理
 
-- 网络请求超时：10 秒
+- 浏览器页面加载超时：30 秒
+- Vercel 函数执行超时：60 秒（Pro 版本）
 - 无效 URL 格式：返回 400 错误
 - 提取失败：返回 500 错误
 - 批量处理：记录成功/失败数量
+
+### 无头浏览器实现
+
+API 使用 Puppeteer + Chromium 获取页面内容，可绕过安全验证机制（如微信公众号文章）：
+
+- **生产环境**：使用 `@sparticuz/chromium-min` 从 CDN 加载优化的 Chromium
+- **本地开发**：使用完整的 `puppeteer` 自带浏览器
+- **性能特点**：
+  - 冷启动：3-5 秒（首次下载 Chromium）
+  - 后续调用：1-2 秒
+  - 内存使用：250-400 MB
+- **浏览器配置**：
+  - 使用真实的 Chrome User-Agent
+  - 等待网络空闲后再提取内容（`networkidle0`）
+  - 无沙箱模式（serverless 环境要求）

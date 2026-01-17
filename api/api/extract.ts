@@ -1,8 +1,7 @@
-import { extractArticle } from '@/lib/extractor';
+import { extractArticle } from '../lib/extractor.js';
 
 export const config = {
-  runtime: 'nodejs',
-  maxDuration: 10,
+  maxDuration: 60,
 };
 
 export default async function handler(req: any, res: any) {
