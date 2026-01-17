@@ -1,0 +1,8 @@
+readability-lxml>=0.8.0
+requests>=2.31.0
+click>=8.1.0
+rich>=13.0.0
+beautifulsoup4>=4.12.0
+Pillow>=10.0.0
+markdownify>=1.2.0
+html2text>=2020.1.16
