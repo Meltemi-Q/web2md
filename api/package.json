@@ -5,7 +5,8 @@
   "description": "Vercel API for extracting web article content and converting to Markdown",
   "scripts": {
     "dev": "vercel dev",
-    "deploy": "vercel deploy"
+    "deploy": "vercel deploy",
+    "build": "echo 'No build needed for serverless functions'"
   },
   "dependencies": {
     "@mozilla/readability": "^0.5.0",
