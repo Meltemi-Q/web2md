@@ -15,6 +15,7 @@
 - ✅ 提取元数据（标题、作者、发布时间）
 - ✅ 保留链接和基本格式
 - ✅ 错误处理和重试机制
+- ✅ 自动兜底策略（Readability / AMP / 可选浏览器渲染）
 
 ---
 
@@ -84,12 +85,15 @@ web2md multi https://example.com/1 https://example.com/2 https://example.com/3 -
 - `--no-images`: 不保留图片链接
 - `--download-images`: 下载图片到本地
 - `--images-dir`: 图片保存目录
+- `--download-files`: 下载附件到本地（PDF/Office/压缩包等）
+- `--files-dir`: 附件保存目录
 
 **batch 命令：**
 - `urls_file`: URL 列表文件（必填）
 - `-o, --output-dir`: 输出目录（默认 ./output）
 - `--format`: 输出格式
 - `--download-images`: 下载图片
+- `--download-files`: 下载附件
 - `--max-workers`: 并发数（默认 5）
 
 **multi 命令：**
@@ -97,6 +101,7 @@ web2md multi https://example.com/1 https://example.com/2 https://example.com/3 -
 - `-o, --output-dir`: 输出目录
 - `--format`: 输出格式
 - `--download-images`: 下载图片
+- `--download-files`: 下载附件
 - `--max-workers`: 并发数
 
 ---
@@ -110,6 +115,8 @@ cd api
 npm install
 vercel deploy
 ```
+
+部署后，直接打开域名首页（`/`）就是网页 App：上传包含 URL 的文件即可打包下载 `Markdown + 图片 + 附件`（`tar.gz`）。
 
 ### API 端点
 
@@ -182,6 +189,16 @@ curl -X POST https://your-project.vercel.app/api/batch \
 }
 ```
 
+#### 3. 打包下载（Markdown + 图片 + 附件）
+
+**POST 请求：**
+```bash
+curl -X POST https://your-project.vercel.app/api/package \
+  -H "Content-Type: application/json" \
+  -d '{"urls":["https://example.com/article1"],"downloadImages":true,"downloadFiles":true}' \
+  --output downweb.tar.gz
+```
+
 ### API 限制
 
 - 单次最多处理 20 个 URL
@@ -193,18 +210,21 @@ curl -X POST https://your-project.vercel.app/api/batch \
 ## 技术栈
 
 ### CLI 工具
-- **Trafilatura**: 内容提取
+- **readability-lxml**: 正文提取（Readability 算法）
 - **Requests**: HTTP 请求
 - **Click**: CLI 框架
 - **Rich**: 终端美化
 - **BeautifulSoup4**: HTML 解析
+- **markdownify / html2text**: 转换输出
 - **Pillow**: 图片处理
+- **Playwright（可选）**: JS 渲染兜底
 
 ### Vercel API
 - **@mozilla/readability**: Mozilla 官方内容提取库
 - **Turndown**: HTML 转 Markdown
 - **JSDOM**: DOM 解析
-- **Axios**: HTTP 客户端
+- **fetch()**: HTTP 客户端
+- **puppeteer-core + @sparticuz/chromium-min**: 浏览器渲染兜底
 
 ---
 

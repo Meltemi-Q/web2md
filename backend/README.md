@@ -39,6 +39,19 @@ curl -X POST https://your-project.vercel.app/api/batch \
   -d '{"urls":["https://example.com/1","https://example.com/2"]}'
 ```
 
+### POST /api/package
+
+打包下载：批量提取 + 下载图片/附件，并在 Markdown 中原位替换为本地相对路径，最终返回 `tar.gz` 压缩包。
+
+```bash
+curl -X POST https://your-project.vercel.app/api/package \
+  -H "Content-Type: application/json" \
+  -d '{"urls":["https://example.com/1"],"downloadImages":true,"downloadFiles":true}' \
+  --output downweb.tar.gz
+```
+
+解压后每篇文章一个文件夹，正文为 `index.md`，资源位于 `assets/`，并附带 `manifest.json`。
+
 ## 响应格式
 
 ### 单个提取

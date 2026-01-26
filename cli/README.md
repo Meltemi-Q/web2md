@@ -21,6 +21,12 @@ web2md extract https://example.com/article -o article.md
 
 # 下载图片
 web2md extract https://example.com/article --download-images -o article.md
+
+# 下载附件（PDF/Office/压缩包等）
+web2md extract https://example.com/article --download-files -o article.md
+
+# 同时下载图片 + 附件
+web2md extract https://example.com/article --download-images --download-files -o article.md
 ```
 
 ### 批量处理
@@ -40,3 +46,12 @@ web2md multi https://example.com/1 https://example.com/2 -o ./output
 - 批量处理
 - 图片下载
 - 元数据提取
+
+## 提高兼容性（可选：JS 渲染兜底）
+
+CLI 默认使用 Readability 提取正文；当遇到需要 JavaScript 渲染或反爬挑战页时，可选使用 Playwright 作为兜底（需要额外安装）。
+
+```bash
+pip install -e ".[browser]"
+playwright install
+```

@@ -22,7 +22,19 @@ def cli():
 @click.option("--no-images", is_flag=True, help="不保留图片链接")
 @click.option("--download-images", is_flag=True, help="下载图片到本地")
 @click.option("--images-dir", help="图片保存目录")
-def extract(url: str, output: str, format: str, no_comments: bool, no_images: bool, download_images: bool, images_dir: str):
+@click.option("--download-files", is_flag=True, help="下载附件到本地（PDF/Office/压缩包等）")
+@click.option("--files-dir", help="附件保存目录")
+def extract(
+    url: str,
+    output: str,
+    format: str,
+    no_comments: bool,
+    no_images: bool,
+    download_images: bool,
+    images_dir: str,
+    download_files: bool,
+    files_dir: str,
+):
     """提取单个网页内容并转换为 Markdown"""
     extractor = WebExtractor()
 
@@ -44,6 +56,21 @@ def extract(url: str, output: str, format: str, no_comments: bool, no_images: bo
         os.makedirs(images_dir, exist_ok=True)
         console.print(f"[yellow]图片将保存到: {images_dir}[/yellow]")
 
+    # 如果要下载附件但没有指定目录，自动创建一个
+    if download_files and not files_dir:
+        if output:
+            output_dir = os.path.dirname(output)
+            if not output_dir:
+                output_dir = "."
+        else:
+            output_dir = "."
+        import hashlib
+
+        url_hash = hashlib.md5(url.encode()).hexdigest()[:8]
+        files_dir = os.path.join(output_dir, f"files_{url_hash}")
+        os.makedirs(files_dir, exist_ok=True)
+        console.print(f"[yellow]附件将保存到: {files_dir}[/yellow]")
+
     with console.status("[bold green]正在抓取内容...", spinner="dots"):
         result = extractor.extract(
             url,
@@ -51,7 +78,9 @@ def extract(url: str, output: str, format: str, no_comments: bool, no_images: bo
             include_comments=not no_comments,
             include_images=not no_images,
             download_images=download_images,
-            images_dir=images_dir
+            images_dir=images_dir,
+            download_files=download_files,
+            files_dir=files_dir,
         )
 
     if result.get("error"):
@@ -67,6 +96,8 @@ def extract(url: str, output: str, format: str, no_comments: bool, no_images: bo
     console.print(f"[bold]来源:[/bold] {result['url']}")
     if result.get('images'):
         console.print(f"[bold]图片:[/bold] 已下载 {len(result['images'])} 张")
+    if result.get('files'):
+        console.print(f"[bold]附件:[/bold] 已下载 {len(result['files'])} 个")
 
     console.print(f"\n[bold green]内容预览:[/bold green]\n")
     preview = result['content'][:500] + "..." if len(result['content']) > 500 else result['content']
@@ -91,8 +122,9 @@ def extract(url: str, output: str, format: str, no_comments: bool, no_images: bo
 @click.option("-o", "--output-dir", default="./output", help="输出目录")
 @click.option("--format", type=click.Choice(["markdown", "html", "txt"]), default="markdown", help="输出格式")
 @click.option("--download-images", is_flag=True, help="下载图片到本地")
+@click.option("--download-files", is_flag=True, help="下载附件到本地")
 @click.option("--max-workers", default=5, help="并发数")
-def batch(urls_file: str, output_dir: str, format: str, download_images: bool, max_workers: int):
+def batch(urls_file: str, output_dir: str, format: str, download_images: bool, download_files: bool, max_workers: int):
     """批量提取多个网页（从文件读取 URL 列表）"""
     # 读取 URL 列表
     with open(urls_file, 'r', encoding='utf-8') as f:
@@ -113,7 +145,8 @@ def batch(urls_file: str, output_dir: str, format: str, download_images: bool, m
             urls,
             output_dir=output_dir,
             output_format=format,
-            download_images=download_images
+            download_images=download_images,
+            download_files=download_files,
         )
 
         progress.update(task, completed=len(urls))
@@ -141,8 +174,9 @@ def batch(urls_file: str, output_dir: str, format: str, download_images: bool, m
 @click.option("-o", "--output-dir", default="./output", help="输出目录")
 @click.option("--format", type=click.Choice(["markdown", "html", "txt"]), default="markdown", help="输出格式")
 @click.option("--download-images", is_flag=True, help="下载图片到本地")
+@click.option("--download-files", is_flag=True, help="下载附件到本地")
 @click.option("--max-workers", default=5, help="并发数")
-def multi(urls: tuple, output_dir: str, format: str, download_images: bool, max_workers: int):
+def multi(urls: tuple, output_dir: str, format: str, download_images: bool, download_files: bool, max_workers: int):
     """批量提取多个网页（直接传入 URL）"""
     console.print(f"[bold]准备处理 {len(urls)} 个 URL[/bold]\n")
 
@@ -154,7 +188,8 @@ def multi(urls: tuple, output_dir: str, format: str, download_images: bool, max_
             list(urls),
             output_dir=output_dir,
             output_format=format,
-            download_images=download_images
+            download_images=download_images,
+            download_files=download_files,
         )
         progress.update(task, completed=len(urls))
 
