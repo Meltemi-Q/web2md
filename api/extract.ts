@@ -1,4 +1,4 @@
-import { extractArticle } from '../lib/extractor.js';
+import { extractArticle } from './lib/extractor.js';
 
 export const config = {
   maxDuration: 60,

@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { extractArticle } from '../lib/extractor.js';
-import { markdownToPdf } from '../lib/pdf-generator.js';
+import { extractArticle } from './lib/extractor.js';
+import { markdownToPdf } from './lib/pdf-generator.js';
 
 /**
  * PDF 导出端点

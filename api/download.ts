@@ -1,6 +1,6 @@
 import crypto from 'crypto';
-import { createTarGz, type TarEntry } from '../lib/tar.js';
-import { extractArticleWithAssets, type AssetManifest } from '../lib/extractor.js';
+import { createTarGz, type TarEntry } from './lib/tar.js';
+import { extractArticleWithAssets, type AssetManifest } from './lib/extractor.js';
 
 export const config = {
   maxDuration: 60,
