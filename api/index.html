@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DownWeb - Web to Markdown</title>
+    <style>
+      :root {
+        --bg: #0b1220;
+        --card: rgba(255, 255, 255, 0.06);
+        --border: rgba(255, 255, 255, 0.12);
+        --text: rgba(255, 255, 255, 0.92);
+        --muted: rgba(255, 255, 255, 0.7);
+        --accent: #7c3aed;
+        --accent2: #22c55e;
+        --danger: #ef4444;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: radial-gradient(1200px 800px at 10% 0%, rgba(124, 58, 237, 0.35), transparent 60%),
+          radial-gradient(1000px 700px at 90% 10%, rgba(34, 197, 94, 0.25), transparent 60%),
+          var(--bg);
+        color: var(--text);
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji",
+          "Segoe UI Emoji";
+      }
+      .wrap {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 32px 16px 64px;
+      }
+      h1 {
+        font-size: 28px;
+        margin: 0 0 8px;
+        letter-spacing: 0.2px;
+      }
+      p {
+        margin: 8px 0 0;
+        color: var(--muted);
+        line-height: 1.6;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 16px;
+        margin-top: 18px;
+      }
+      @media (max-width: 900px) {
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        padding: 16px;
+        backdrop-filter: blur(10px);
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .label {
+        font-size: 13px;
+        color: var(--muted);
+      }
+      textarea,
+      input[type="text"] {
+        width: 100%;
+        box-sizing: border-box;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--text);
+        padding: 10px 12px;
+        outline: none;
+      }
+      textarea {
+        min-height: 200px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+      input[type="file"] {
+        color: var(--muted);
+      }
+      button {
+        appearance: none;
+        border: 0;
+        border-radius: 10px;
+        padding: 10px 14px;
+        font-weight: 600;
+        color: white;
+        background: linear-gradient(135deg, var(--accent), #2563eb);
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      .secondary {
+        background: rgba(255, 255, 255, 0.1);
+        border: 1px solid var(--border);
+      }
+      .status {
+        margin-top: 12px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(0, 0, 0, 0.25);
+        color: var(--muted);
+        white-space: pre-wrap;
+      }
+      .status.ok {
+        border-color: rgba(34, 197, 94, 0.5);
+        color: rgba(220, 252, 231, 0.9);
+      }
+      .status.err {
+        border-color: rgba(239, 68, 68, 0.55);
+        color: rgba(254, 226, 226, 0.92);
+      }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: rgba(255, 255, 255, 0.06);
+        font-size: 13px;
+        color: var(--muted);
+      }
+      .hint {
+        font-size: 12px;
+        color: var(--muted);
+        margin-top: 8px;
+      }
+      a {
+        color: rgba(147, 197, 253, 0.95);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <h1>DownWeb - Web to Markdown</h1>
+      <p>
+        上传包含 URL 的文本文件（每行一个），或者直接粘贴 URL 列表，点击“打包下载”即可获取
+        <span class="pill">Markdown + 图片 + 附件</span>（默认打包为 <span class="pill">tar.gz</span>）。
+      </p>
+
+      <div class="grid">
+        <div class="card">
+          <div class="row">
+            <div class="label">URL 文件（可选）</div>
+            <input id="file" type="file" accept=".txt,.md,text/plain" />
+          </div>
+          <div class="hint">支持 # 开头注释行；空行会被忽略。</div>
+
+          <div style="height: 12px"></div>
+          <div class="label">或粘贴 URL（每行一个）</div>
+          <textarea id="urls" placeholder="https://example.com/a&#10;https://example.com/b"></textarea>
+
+          <div style="height: 12px"></div>
+          <div class="label">导出格式</div>
+          <div class="row">
+            <label class="pill"><input type="radio" name="format" value="markdown" checked /> Markdown + 打包</label>
+            <label class="pill"><input type="radio" name="format" value="pdf" /> PDF（仅单个 URL）</label>
+          </div>
+
+          <div style="height: 12px"></div>
+          <div class="row" id="mdOptions">
+            <label class="pill"><input id="optImages" type="checkbox" checked /> 下载图片</label>
+            <label class="pill"><input id="optFiles" type="checkbox" checked /> 下载附件</label>
+          </div>
+
+          <div style="height: 14px"></div>
+          <div class="row">
+            <button id="run">打包下载</button>
+            <button id="fillDemo" class="secondary" type="button">填充示例</button>
+          </div>
+
+          <div id="status" class="status">准备就绪。</div>
+        </div>
+
+        <div class="card">
+          <div class="label">说明</div>
+          <p style="margin-top: 10px">
+            <strong>Markdown 模式：</strong><br />
+            1) URL 列表发送到 <code>/api/package</code>，服务端抓取网页正文并转换为 Markdown<br />
+            2) 图片与附件会被下载，打包为 <code>tar.gz</code><br /><br />
+            <strong>PDF 模式：</strong><br />
+            1) 仅支持单个 URL，发送到 <code>/api/pdf</code><br />
+            2) 服务端抓取内容后渲染为 PDF 文件<br /><br />
+            <strong>飞书文档导出：</strong><br />
+            飞书文档需要登录态，请使用 Bookmarklet 方案（见下方卡片）
+          </p>
+          <p style="margin-top: 12px">
+            API：<a href="/api/extract?url=https://example.com" target="_blank" rel="noreferrer">/api/extract</a> /
+            <a href="/api/batch" target="_blank" rel="noreferrer">/api/batch</a> /
+            <a href="/api/package" target="_blank" rel="noreferrer">/api/package</a> /
+            <a href="/api/pdf" target="_blank" rel="noreferrer">/api/pdf</a>
+          </p>
+        </div>
+      </div>
+
+      <div style="height: 16px"></div>
+
+      <div class="card">
+        <div class="label">飞书文档导出</div>
+        <p style="margin-top: 10px">
+          由于飞书文档需要登录权限，无法通过"输入网址"的方式导出。<br />
+          推荐使用以下两种方案：
+        </p>
+
+        <p style="margin-top: 12px"><strong>方案一：浏览器扩展（推荐）</strong></p>
+        <ol style="margin-top: 8px; padding-left: 20px; color: var(--muted)">
+          <li>安装 <a href="https://github.com/whale4113/cloud-document-converter" target="_blank" rel="noreferrer" style="color: var(--accent2);">Cloud Document Converter</a> 扩展</li>
+          <li>支持 Chrome / Edge / Firefox</li>
+          <li>功能完整：文档、图片、附件、白板、流程图等</li>
+        </ol>
+
+        <p style="margin-top: 12px"><strong>方案二：Bookmarklet（快捷工具）</strong></p>
+        <ol style="margin-top: 8px; padding-left: 20px; color: var(--muted)">
+          <li>将以下链接拖拽到浏览器书签栏：
+            <a href="javascript:(function(){var s=document.createElement('script');s.src='/lark-converter.js';document.body.appendChild(s);})();"
+               style="display: inline-block; padding: 4px 8px; margin: 4px 0; background: rgba(34, 197, 94, 0.2); border: 1px solid rgba(34, 197, 94, 0.4); border-radius: 6px; color: var(--accent2);">
+              📥 导出飞书文档
+            </a>
+          </li>
+          <li>打开飞书文档页面 → 点击书签</li>
+          <li>下载 Markdown（基础功能，暂不支持图片）</li>
+        </ol>
+        <p style="margin-top: 12px; font-size: 13px; color: var(--muted)">
+          注：两种方案都利用你的浏览器登录状态，数据在本地处理，不会上传到服务器。
+        </p>
+      </div>
+    </div>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const statusEl = $('status');
+      const runBtn = $('run');
+      const demoBtn = $('fillDemo');
+      const mdOptionsEl = $('mdOptions');
+
+      function setStatus(text, kind) {
+        statusEl.textContent = text;
+        statusEl.classList.remove('ok', 'err');
+        if (kind) statusEl.classList.add(kind);
+      }
+
+      function parseUrls(text) {
+        return (text || '')
+          .split(/\r?\n/g)
+          .map((l) => l.trim())
+          .filter((l) => l && !l.startsWith('#'));
+      }
+
+      async function readFile(file) {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result || ''));
+          reader.onerror = () => reject(reader.error || new Error('读取文件失败'));
+          reader.readAsText(file);
+        });
+      }
+
+      // 监听格式选择变化
+      document.querySelectorAll('input[name="format"]').forEach((radio) => {
+        radio.addEventListener('change', (e) => {
+          const isPdf = e.target.value === 'pdf';
+          mdOptionsEl.style.display = isPdf ? 'none' : 'flex';
+          runBtn.textContent = isPdf ? '导出 PDF' : '打包下载';
+        });
+      });
+
+      demoBtn.addEventListener('click', () => {
+        $('urls').value = [
+          'https://news.ycombinator.com/',
+          'https://github.com/',
+          '# 也可以放文章链接',
+        ].join('\n');
+      });
+
+      runBtn.addEventListener('click', async () => {
+        runBtn.disabled = true;
+        const format = document.querySelector('input[name="format"]:checked').value;
+
+        try {
+          if (format === 'pdf') {
+            await handlePdfExport();
+          } else {
+            await handleMarkdownExport();
+          }
+        } catch (e) {
+          setStatus(`失败：${e && e.message ? e.message : String(e)}`, 'err');
+        } finally {
+          runBtn.disabled = false;
+        }
+      });
+
+      async function handlePdfExport() {
+        setStatus('正在读取 URL...', null);
+
+        let urls = [];
+        const file = $('file').files && $('file').files[0];
+        if (file) {
+          const text = await readFile(file);
+          urls = parseUrls(text);
+        } else {
+          urls = parseUrls($('urls').value);
+        }
+
+        if (!urls.length) {
+          setStatus('没有有效 URL。请输入或粘贴 URL。', 'err');
+          return;
+        }
+
+        if (urls.length > 1) {
+          setStatus('PDF 模式仅支持单个 URL。请使用 Markdown 模式处理多个 URL。', 'err');
+          return;
+        }
+
+        setStatus(`正在生成 PDF：${urls[0]}...\n（提示：PDF 生成可能需要 10-30 秒）`, null);
+
+        const resp = await fetch('/api/pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: urls[0] }),
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(text || `HTTP ${resp.status}`);
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `document_${Date.now()}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        setStatus('PDF 生成完成：已开始下载。', 'ok');
+      }
+
+      async function handleMarkdownExport() {
+        setStatus('正在读取 URL 列表...', null);
+
+        let urls = [];
+        const file = $('file').files && $('file').files[0];
+        if (file) {
+          const text = await readFile(file);
+          urls = parseUrls(text);
+        } else {
+          urls = parseUrls($('urls').value);
+        }
+
+        if (!urls.length) {
+          setStatus('没有有效 URL。请上传文件或粘贴 URL 列表。', 'err');
+          return;
+        }
+
+        setStatus(`开始打包：${urls.length} 个 URL...\n（提示：大批量建议用 CLI，本页面/Serverless 有时限）`, null);
+
+        const resp = await fetch('/api/package', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            urls,
+            downloadImages: $('optImages').checked,
+            downloadFiles: $('optFiles').checked,
+          }),
+        });
+
+        if (!resp.ok) {
+          const text = await resp.text();
+          throw new Error(text || `HTTP ${resp.status}`);
+        }
+
+        const blob = await resp.blob();
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `downweb_${Date.now()}.tar.gz`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+
+        setStatus('打包完成：已开始下载。\n解压后查看每篇文章文件夹中的 index.md。', 'ok');
+      }
+    </script>
+  </body>
+</html>
+
